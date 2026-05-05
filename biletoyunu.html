@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fransa Kaşifi - Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --primary: #1e3a8a; --gold: #d4af37; --danger: #ef4444; --success: #22c55e; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Montserrat', sans-serif; background: #2c3e50; display: flex; justify-content: center; align-items: center; }
+        
+        #game-container {
+            width: 1000px; height: 650px;
+            background-image: url('12.jpg'); background-size: cover; background-position: center;
+            border: 8px solid var(--primary); border-radius: 20px;
+            position: relative; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.1); display: flex; flex-direction: column; }
+        
+        .header { background: rgba(30, 58, 138, 0.9); padding: 15px 30px; color: white; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--gold); z-index: 10; }
+        .stats { display: flex; gap: 30px; font-size: 24px; }
+        .hearts i { color: var(--danger); margin-left: 5px; }
+
+        .content { flex-grow: 1; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.92); margin: 65px 20px 20px 20px; border-radius: 15px; }
+        
+        .question-box { text-align: center; margin-bottom: 15px; font-size: 22px; font-weight: 800; color: #333; }
+        .main-q-img { width: 280px; height: 150px; border-radius: 10px; border: 4px solid var(--primary); object-fit: cover; margin-bottom: 10px; display: none; }
+
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 850px; }
+        .option { background: white; border: 3px solid #cbd5e1; padding: 8px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+        .option:hover { border-color: var(--primary); transform: scale(1.02); }
+        .option.correct { background: var(--success) !important; color: white; border-color: var(--success); }
+        .option.wrong { background: var(--danger) !important; color: white; border-color: var(--danger); }
+
+        .matching-container { display: flex; gap: 50px; width: 100%; justify-content: center; }
+        .match-column { display: flex; flex-direction: column; gap: 10px; }
+        .match-item { padding: 12px; background: white; border: 2px solid var(--primary); border-radius: 8px; cursor: pointer; font-weight: bold; text-align: center; width: 180px; transition: 0.3s; }
+        .match-item.selected { background: var(--gold); color: white; }
+        .match-item.paired { background: #cbd5e1; cursor: default; opacity: 0.6; pointer-events: none; }
+
+        .opt-img { width: 100px; height: 70px; border-radius: 8px; object-fit: cover; }
+        .opt-letter { background: var(--primary); color: white; width: 30px; height: 30px; border-radius: 50%; text-align: center; line-height: 30px; font-weight: 800; flex-shrink: 0; }
+
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; }
+        .screen.active { display: flex; }
+        button { padding: 12px 35px; font-size: 20px; background: var(--gold); color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: 800; box-shadow: 0 4px 0 #b8860b; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div class="overlay">
+        <!-- GİRİŞ -->
+        <div id="start-screen" class="screen active">
+            <h1 style="color:var(--primary); font-size: 55px; margin-bottom: 5px;">FRANSA KAŞİFİ</h1>
+            <input type="text" id="player-name" placeholder="İsminiz..." style="padding:15px; border-radius:10px; border:2px solid var(--gold); width:250px; text-align:center; font-size:18px;">
+            <button onclick="startGame()">MACERAYA BAŞLA</button>
+        </div>
+
+        <!-- OYUN -->
+        <div id="quiz-screen" class="screen">
+            <div class="header" style="width:100%; position:absolute; top:0;">
+                <div id="display-name">OYUNCU</div>
+                <div class="stats">
+                    <div id="score">PUAN: 0</div>
+                    <div id="hearts" class="hearts">
+                        <i class="fa-solid fa-heart"></i><i class="fa-solid fa-heart"></i><i class="fa-solid fa-heart"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="content" id="quiz-content">
+                <img id="main-question-image" class="main-q-img" src="">
+                <div id="q-text" class="question-box">Soru...</div>
+                <div id="options-area" style="width:100%; display:flex; justify-content:center;"></div>
+            </div>
+        </div>
+
+        <!-- SONUÇ -->
+        <div id="end-screen" class="screen">
+            <h1 id="res-title" style="font-size: 40px; color: var(--primary);">OYUN BİTTİ</h1>
+            <h2 id="final-score">Puan: 0</h2>
+            <div id="leaderboard" style="background:white; padding: 15px; border-radius:15px; margin: 10px; width: 400px; max-height: 250px; overflow-y: auto;">
+                <h3 style="border-bottom: 2px solid var(--gold);">TOP 10 SKOR TABLOSU</h3>
+                <div id="players-list" style="text-align: left; font-size: 14px; line-height: 1.8;"></div>
+            </div>
+            <button onclick="location.reload()">TEKRAR OYNA</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        // SENİN ANA SORULARIN
+        { q: "1. Aşağıdaki yapılardan hangisi Paris’te değildir?", a: ["Eyfel Kulesi", "Louvre Müzesi", "Versay Sarayı", "Notre-Dame"], c: 2, type: "visual" },
+        { q: "2. Gastronomi açısından Fransa’nın en ünlü şehri hangisidir?", a: ["Nice", "Lyon", "Strasbourg", "Toulouse"], c: 1, type: "standard" },
+        { q: "3. Bordeaux aşağıdakilerden hangisiyle öne çıkar?", a: ["Havacılık", "Moda", "Şarap Üretimi", "Film Festivali"], c: 2, type: "standard" },
+        { q: "4. Aşağıdakilerden hangisi Cannes’in ünlü festivalidir?", a: ["Oktoberfest", "Film Festivali", "Venedik", "Rio"], c: 1, type: "standard" },
+        { q: "5. Fransız Devrimi hangi yılda başlamıştır?", a: ["1492", "1789", "1914", "1815"], c: 1, type: "standard" },
+        { q: "6. Aşağıdaki yemeklerden hangisi Fransız mutfağına aittir?", a: ["Sushi", "Pizza", "Ratatouille", "Taco"], c: 2, type: "standard" },
+        { q: "7. Toulouse hangi alanda öne çıkar?", a: ["Sinema", "Havacılık", "Tarım", "Madencilik"], c: 1, type: "standard" },
+        
+        // YENİ EKLENEN SORULAR (SONDA)
+        { q: "8. Napoleon Bonaparte nerede doğmuştur?", a: ["Paris", "Korsika", "Marsilya", "Lyon"], c: 1, type: "standard" },
+        { q: "9. Napoleon'un son savaşı aşağıdakilerden hangisidir?", a: ["Austerlitz", "Borodino", "Waterloo", "Leipzig"], c: 2, type: "standard" },
+        { 
+            q: "10. Şehirleri ünlü sembolleriyle eşleştir!", 
+            type: "matching",
+            pairs: [
+                { left: "Paris", right: "Eyfel Kulesi" },
+                { left: "Cannes", right: "Film Festivali" },
+                { left: "Bordeaux", right: "Şarap" },
+                { left: "Toulouse", right: "Havacılık" }
+            ]
+        },
+        { 
+            q: "11. Yemekleri açıklamalarıyla eşleştir!", 
+            type: "matching",
+            pairs: [
+                { left: "Croissant", right: "Tereyağlı Hamur" },
+                { left: "Ratatouille", right: "Sebze Yemeği" },
+                { left: "Escargot", right: "Salyangoz" },
+                { left: "Macaron", right: "Kurabiye" }
+            ]
+        }
+    ];
+
+    let currentQ = 0; let score = 0; let lives = 3; let playerName = "";
+    let selectedLeft = null; let matchedCount = 0;
+
+    function startGame() {
+        playerName = document.getElementById('player-name').value.trim() || "Gezgin";
+        document.getElementById('display-name').innerText = "KAŞİF: " + playerName;
+        showScreen('quiz-screen');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        const qData = questions[currentQ];
+        const optionsArea = document.getElementById('options-area');
+        const mainImg = document.getElementById('main-question-image');
+        document.getElementById('q-text').innerText = qData.q;
+        optionsArea.innerHTML = "";
+        mainImg.style.display = "none";
+
+        if (qData.type === "visual") {
+            const grid = document.createElement('div'); grid.className = 'options-grid';
+            qData.a.forEach((opt, i) => {
+                grid.innerHTML += `<div class="option" onclick="checkAnswer(${i})"><img src="${13 + i}.jpg" class="opt-img" onerror="this.src='https://via.placeholder.com/100x70?text=Fransa'"><div class="opt-letter">${String.fromCharCode(65+i)}</div><div>${opt}</div></div>`;
+            });
+            optionsArea.appendChild(grid);
+        } 
+        else if (qData.type === "matching") {
+            const container = document.createElement('div'); container.className = 'matching-container';
+            const leftCol = document.createElement('div'); leftCol.className = 'match-column';
+            const rightCol = document.createElement('div'); rightCol.className = 'match-column';
+            
+            const leftItems = qData.pairs.map(p => p.left).sort(() => Math.random() - 0.5);
+            const rightItems = qData.pairs.map(p => p.right).sort(() => Math.random() - 0.5);
+
+            leftItems.forEach(text => {
+                const div = document.createElement('div'); div.className = 'match-item'; div.innerText = text;
+                div.onclick = () => selectLeft(div, text);
+                leftCol.appendChild(div);
+            });
+
+            rightItems.forEach(text => {
+                const div = document.createElement('div'); div.className = 'match-item'; div.innerText = text;
+                div.onclick = () => selectRight(div, text);
+                rightCol.appendChild(div);
+            });
+
+            container.append(leftCol, rightCol);
+            optionsArea.appendChild(container);
+            matchedCount = 0;
+        }
+        else {
+            mainImg.style.display = "block";
+            // 2. sorudan itibaren resimler 17.jpg'den devam eder
+            mainImg.src = (16 + currentQ) + ".jpg"; 
+            const grid = document.createElement('div'); grid.className = 'options-grid';
+            qData.a.forEach((opt, i) => {
+                grid.innerHTML += `<div class="option" onclick="checkAnswer(${i})"><div class="opt-letter">${String.fromCharCode(65+i)}</div><div>${opt}</div></div>`;
+            });
+            optionsArea.appendChild(grid);
+        }
+    }
+
+    function selectLeft(el, text) {
+        if(el.classList.contains('paired')) return;
+        document.querySelectorAll('.match-column:first-child .match-item').forEach(i => i.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedLeft = { el, text };
+    }
+
+    function selectRight(el, text) {
+        if(!selectedLeft || el.classList.contains('paired')) return;
+        const pair = questions[currentQ].pairs.find(p => p.left === selectedLeft.text);
+        
+        if(pair.right === text) {
+            el.classList.add('paired');
+            selectedLeft.el.classList.add('paired');
+            selectedLeft.el.classList.remove('selected');
+            selectedLeft = null;
+            matchedCount++;
+            score += 25;
+            document.getElementById('score').innerText = "PUAN: " + score;
+            if(matchedCount === 4) setTimeout(nextQuestion, 1000);
+        } else {
+            lives--; updateHearts();
+            if(lives <= 0) endGame(false);
+            el.style.backgroundColor = 'var(--danger)';
+            setTimeout(() => el.style.backgroundColor = 'white', 500);
+        }
+    }
+
+    function checkAnswer(idx) {
+        const correct = questions[currentQ].c;
+        const btns = document.querySelectorAll('.option');
+        if(idx === correct) {
+            btns[idx].classList.add('correct');
+            score += 100;
+        } else {
+            btns[idx].classList.add('wrong');
+            btns[correct].classList.add('correct');
+            lives--; updateHearts();
+        }
+        document.getElementById('score').innerText = "PUAN: " + score;
+        setTimeout(() => { if(lives > 0) nextQuestion(); else endGame(false); }, 1200);
+    }
+
+    function nextQuestion() {
+        currentQ++;
+        if(currentQ < questions.length) loadQuestion();
+        else endGame(true);
+    }
+
+    function updateHearts() {
+        const h = document.getElementById('hearts'); h.innerHTML = "";
+        for(let i=0; i<lives; i++) h.innerHTML += '<i class="fa-solid fa-heart"></i>';
+    }
+
+    function saveScore(name, finalScore) {
+        let scores = JSON.parse(localStorage.getItem('fransaScores')) || [];
+        scores.push({ name, score: finalScore, date: new Date().toLocaleDateString() });
+        scores.sort((a, b) => b.score - a.score);
+        scores = scores.slice(0, 10);
+        localStorage.setItem('fransaScores', JSON.stringify(scores));
+    }
+
+    function endGame(win) {
+        saveScore(playerName, score);
+        showScreen('end-screen');
+        document.getElementById('res-title').innerText = win ? "TEBRİKLER!" : "CANIN BİTTİ!";
+        document.getElementById('final-score').innerText = "Toplam Puanın: " + score;
+        
+        const list = document.getElementById('players-list');
+        const scores = JSON.parse(localStorage.getItem('fransaScores')) || [];
+        list.innerHTML = scores.map((s, i) => `<div><b>${i+1}.</b> ${s.name} - <span style="color:var(--primary)">${s.score} Puan</span> <small style="float:right">${s.date}</small></div>`).join('');
+    }
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+</body>
+</html>
